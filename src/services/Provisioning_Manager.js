@@ -17,6 +17,9 @@ export default class Provisioning {
     this.lookup = {};
   }
 
+  // UUID do serviço customizado ESP32-C3
+  static CUSTOM_SERVICE_UUID = '021a9004-0382-4aea-bff4-6b3f1c5adfb4';
+
   mapCharacteristicsBySuffix(characteristics) {
     const suffixToKeyMap = {
       ff4f: 'prov-session',
@@ -52,7 +55,11 @@ export default class Provisioning {
             name: deviceName
           }
         ],
-        optionalServices: ['*']  // Permite acesso a todos os serviços
+        optionalServices: [
+          'generic_access',
+          'generic_attribute', 
+          Provisioning.CUSTOM_SERVICE_UUID // Serviço customizado ESP32-C3
+        ]
       });
 
       console.log('Dispositivo selecionado:', this.device.name);
@@ -61,6 +68,9 @@ export default class Provisioning {
       this.server = await this.device.gatt.connect();
       console.log('Conectado ao servidor GATT');
 
+      // Configurar listener para desconexão
+      this.device.addEventListener('gattserverdisconnected', this.handleDisconnect.bind(this));
+
       // Obter todos os serviços disponíveis
       const services = await this.server.getPrimaryServices();
       console.log('Serviços encontrados:', services.length);
@@ -68,23 +78,20 @@ export default class Provisioning {
         console.log(`  ${index + 1}. ${service.uuid}`);
       });
 
-      // Obter todas as características de todos os serviços
-      const allCharacteristics = [];
-      for (const service of services) {
-        try {
-          const characteristics = await service.getCharacteristics();
-          console.log(`Serviço ${service.uuid}: ${characteristics.length} características`);
-          characteristics.forEach(char => {
-            console.log(`  - ${char.uuid}`);
-          });
-          allCharacteristics.push(...characteristics);
-        } catch (error) {
-          console.warn(`Erro ao obter características do serviço ${service.uuid}:`, error);
-        }
-      }
+      // Obter especificamente o serviço customizado
+      this.service = await this.server.getPrimaryService(Provisioning.CUSTOM_SERVICE_UUID);
+      console.log('Serviço customizado encontrado:', this.service.uuid);
+
+      // Listar características do serviço customizado
+      const characteristics = await this.service.getCharacteristics();
+      console.log('Características disponíveis:', characteristics.length);
+      characteristics.forEach(char => {
+        console.log('- Characteristic UUID:', char.uuid);
+        console.log('- Properties:', char.properties);
+      });
 
       // Mapear características por sufixo
-      this.lookup = this.mapCharacteristicsBySuffix(allCharacteristics);
+      this.lookup = this.mapCharacteristicsBySuffix(characteristics);
       console.log('Características mapeadas:', Object.keys(this.lookup));
       
       return this.device;
@@ -92,6 +99,14 @@ export default class Provisioning {
       console.error('Erro na conexão:', error);
       throw error;
     }
+  }
+
+  handleDisconnect() {
+    console.log('Dispositivo desconectado');
+    this.device = null;
+    this.server = null;
+    this.service = null;
+    this.lookup = {};
   }
 
   async disconnect() {

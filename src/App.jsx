@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { setSSID, setBluetoothConnection, setBluetoothDevice, setBluetoothStatus } from './redux/actions/actions'
+import { 
+  setSSID, 
+  connectAndGetProtocolVersion, 
+  scanWifiNetworks, 
+  configureWifi, 
+  disconnectProvisioning
+} from './redux/actions/actions';
 import './index.css'
 
 function App() {
@@ -27,98 +33,23 @@ function App() {
 
   // Função para conectar Bluetooth
   const handleBluetoothConnect = async () => {
-    if (!navigator.bluetooth) {
-      setMessage({
-        type: 'error',
-        text: 'Bluetooth não está disponível neste navegador'
-      })
-      return
-    }
-
-    setIsConnectingBluetooth(true)
-    dispatch(setBluetoothStatus('Conectando...'))
-
     try {
-      // Solicitar dispositivo Bluetooth específico
-      const device = await navigator.bluetooth.requestDevice({
-        filters: [
-          {
-            name: 'PROV_82D988'
-          }
-        ],
-        optionalServices: [
-          'generic_access',
-          'generic_attribute', 
-          '021a9004-0382-4aea-bff4-6b3f1c5adfb4' // Seu serviço customizado
-        ]
-      })
-
-      console.log('Dispositivo selecionado:', device.name)
-
-      // Conectar ao dispositivo
-      const server = await device.gatt.connect()
-      console.log('Conectado ao servidor GATT')
-
-      // Configurar listener para desconexão
-      device.addEventListener('gattserverdisconnected', handleBluetoothDisconnect)
-
-      const services = await server.getPrimaryServices();
-      console.log('Serviços encontrados:', services.length);
-
-      // Obter especificamente seu serviço customizado
-    const customService = await server.getPrimaryService('021a9004-0382-4aea-bff4-6b3f1c5adfb4')
-    console.log('Serviço customizado encontrado:', customService.uuid)
-
-    // Listar características do serviço customizado
-    const characteristics = await customService.getCharacteristics()
-    console.log('Características disponíveis:')
-    characteristics.forEach(char => {
-      console.log('- Characteristic UUID:', char.uuid)
-      console.log('- Properties:', char.properties)
-    })
-
-      // Salvar no Redux
-      dispatch(setBluetoothDevice(device))
-      dispatch(setBluetoothConnection(true))
-      dispatch(setBluetoothStatus(`Conectado: ${device.name}`))
-
-
-
-      setMessage({
-        type: 'success',
-        text: `Conectado com sucesso ao dispositivo: ${device.name}`
-      })
-
-    } catch (error) {
-      console.error('Erro ao conectar Bluetooth:', error)
+      setIsLoading(true);
+      setMessage('');
+      setProvisioningError('');
       
-      if (error.name === 'NotFoundError') {
-        dispatch(setBluetoothStatus('Dispositivo PROV_82D988 não encontrado'))
-        setMessage({
-          type: 'error',
-          text: 'Dispositivo PROV_82D988 não foi encontrado. Verifique se está ligado e visível.'
-        })
-      } else if (error.name === 'NotAllowedError') {
-        dispatch(setBluetoothStatus('Permissão negada'))
-        setMessage({
-          type: 'error',
-          text: 'Permissão para Bluetooth foi negada'
-        })
-      } else {
-        dispatch(setBluetoothStatus('Erro na conexão'))
-        setMessage({
-          type: 'error',
-          text: `Erro ao conectar: ${error.message}`
-        })
+      const provManager = await dispatch(connectAndGetProtocolVersion());
+      
+      if (provManager) {
+        setMessage('Dispositivo conectado e versão do protocolo obtida!');
       }
-
-      // Limpar estado em caso de erro
-      dispatch(setBluetoothDevice(null))
-      dispatch(setBluetoothConnection(false))
+    } catch (error) {
+      console.error('Erro na conexão Bluetooth:', error);
+      setMessage('Erro na conexão: ' + error.message);
     } finally {
-      setIsConnectingBluetooth(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Função para desconectar Bluetooth
   const handleBluetoothDisconnect = () => {
