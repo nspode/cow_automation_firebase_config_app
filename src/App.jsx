@@ -46,7 +46,11 @@ function App() {
             name: 'PROV_82D988'
           }
         ],
-        optionalServices: ['generic_access'] // Serviços opcionais
+        optionalServices: [
+          'generic_access',
+          'generic_attribute', 
+          '021a9004-0382-4aea-bff4-6b3f1c5adfb4' // Seu serviço customizado
+        ]
       })
 
       console.log('Dispositivo selecionado:', device.name)
@@ -58,10 +62,27 @@ function App() {
       // Configurar listener para desconexão
       device.addEventListener('gattserverdisconnected', handleBluetoothDisconnect)
 
+      const services = await server.getPrimaryServices();
+      console.log('Serviços encontrados:', services.length);
+
+      // Obter especificamente seu serviço customizado
+    const customService = await server.getPrimaryService('021a9004-0382-4aea-bff4-6b3f1c5adfb4')
+    console.log('Serviço customizado encontrado:', customService.uuid)
+
+    // Listar características do serviço customizado
+    const characteristics = await customService.getCharacteristics()
+    console.log('Características disponíveis:')
+    characteristics.forEach(char => {
+      console.log('- Characteristic UUID:', char.uuid)
+      console.log('- Properties:', char.properties)
+    })
+
       // Salvar no Redux
       dispatch(setBluetoothDevice(device))
       dispatch(setBluetoothConnection(true))
       dispatch(setBluetoothStatus(`Conectado: ${device.name}`))
+
+
 
       setMessage({
         type: 'success',
