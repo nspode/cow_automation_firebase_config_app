@@ -1,7 +1,12 @@
 import { useState } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { setSSID } from './redux/actions/actions'
 import './index.css'
 
 function App() {
+  const dispatch = useDispatch()
+  const ssid = useSelector(state => state.volatileState?.ssid || '')
+  
   const [showPassword, setShowPassword] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -10,6 +15,10 @@ function App() {
   const handleSubmit = (e) => {
     e.preventDefault()
     // Funcionalidade será implementada posteriormente
+  }
+
+  const handleSSIDChange = (e) => {
+    dispatch(setSSID(e.target.value))
   }
 
   return (
@@ -43,6 +52,8 @@ function App() {
               type="text"
               id="ssid"
               placeholder="Digite o nome da rede"
+              value={ssid}
+              onChange={handleSSIDChange}
               required
               className="text-input"
             />
