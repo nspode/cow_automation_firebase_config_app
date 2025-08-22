@@ -1,20 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { setSSID, fetchSSIDs } from './redux/actions/actions'
+import { setSSID } from './redux/actions/actions'
 import './index.css'
 
 function App() {
   const dispatch = useDispatch()
   const ssid = useSelector(state => state.volatileState?.ssid || '')
-  const availableSSIDs = useSelector(state => state.volatileState?.availableSSIDs || [])
-  const isFetchingSSIDs = useSelector(state => state.volatileState?.isFetchingSSIDs || false)
-  const ssidError = useSelector(state => state.volatileState?.ssidError || null)
   
   const [showPassword, setShowPassword] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState(null)
-  const [showSSIDDropdown, setShowSSIDDropdown] = useState(false)
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -23,17 +19,6 @@ function App() {
 
   const handleSSIDChange = (e) => {
     dispatch(setSSID(e.target.value))
-    setShowSSIDDropdown(false)
-  }
-
-  const handleSearchSSIDs = () => {
-    dispatch(fetchSSIDs())
-    setShowSSIDDropdown(true)
-  }
-
-  const handleSSIDSelect = (selectedSSID) => {
-    dispatch(setSSID(selectedSSID))
-    setShowSSIDDropdown(false)
   }
 
   return (
@@ -63,57 +48,16 @@ function App() {
             <label htmlFor="ssid" className="field-label">
               Nome da Rede Wi-Fi (SSID)
             </label>
-            <div className="ssid-field-container">
-              <div className="ssid-input-container">
-                <input
-                  type="text"
-                  id="ssid"
-                  placeholder="Digite o nome da rede"
-                  value={ssid}
-                  onChange={handleSSIDChange}
-                  required
-                  className="text-input ssid-input"
-                />
-                <button
-                  type="button"
-                  className="search-ssid-button"
-                  onClick={handleSearchSSIDs}
-                  disabled={isFetchingSSIDs}
-                >
-                  {isFetchingSSIDs ? (
-                    <>
-                      <div className="spinner"></div>
-                      Buscando...
-                    </>
-                  ) : (
-                    <>
-                      🔍 Buscar
-                    </>
-                  )}
-                </button>
-              </div>
-              
-              {/* SSID Dropdown */}
-              {showSSIDDropdown && availableSSIDs.length > 0 && (
-                <div className="ssid-dropdown">
-                  {availableSSIDs.map((availableSSID, index) => (
-                    <div
-                      key={index}
-                      className={`ssid-option ${availableSSID === ssid ? 'selected' : ''}`}
-                      onClick={() => handleSSIDSelect(availableSSID)}
-                    >
-                      {availableSSID}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <input
+              type="text"
+              id="ssid"
+              placeholder="Digite o nome da rede"
+              value={ssid}
+              onChange={handleSSIDChange}
+              required
+              className="text-input"
+            />
             <p className="help-text">Nome da rede Wi-Fi que o dispositivo irá conectar</p>
-            {ssidError && (
-              <p className="help-text" style={{ color: '#c62828' }}>
-                Erro ao buscar SSIDs: {ssidError}
-              </p>
-            )}
           </div>
 
           {/* Password Field */}
