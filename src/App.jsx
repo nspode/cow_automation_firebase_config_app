@@ -1,34 +1,120 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import './index.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [showPassword, setShowPassword] = useState(false)
+  const [isConnected, setIsConnected] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [message, setMessage] = useState(null)
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    // Funcionalidade será implementada posteriormente
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="app-container">
+      {/* Header Section */}
+      <header className="header">
+        <div className="logo-container">
+          <img src="/logo.png" alt="CowMed Logo" className="logo" />
+        </div>
+        <p className="subtitle">Configure seu dispositivo</p>
+      </header>
+
+      {/* Form Container */}
+      <div className="form-container">
+        {/* Status Indicator */}
+        <div className="status-indicator">
+          <div className={`indicator-dot ${isConnected ? 'connected' : 'disconnected'}`}></div>
+          <span className="status-text">
+            {isConnected ? 'Dispositivo conectado' : 'Dispositivo desconectado'}
+          </span>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="form">
+          {/* SSID Field */}
+          <div className="form-field">
+            <label htmlFor="ssid" className="field-label">
+              Nome da Rede Wi-Fi (SSID)
+            </label>
+            <input
+              type="text"
+              id="ssid"
+              placeholder="Digite o nome da rede"
+              required
+              className="text-input"
+            />
+            <p className="help-text">Nome da rede Wi-Fi que o dispositivo irá conectar</p>
+          </div>
+
+          {/* Password Field */}
+          <div className="form-field">
+            <label htmlFor="password" className="field-label">
+              Senha da Rede
+            </label>
+            <div className="password-input-container">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                placeholder="Digite a senha"
+                required
+                className="text-input password-input"
+              />
+              <button
+                type="button"
+                className="toggle-password"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
+            <p className="help-text">Senha da rede Wi-Fi (deixe em branco se não houver)</p>
+          </div>
+
+          {/* Device Code Field */}
+          <div className="form-field">
+            <label htmlFor="deviceCode" className="field-label">
+              Código do Dispositivo
+            </label>
+            <input
+              type="text"
+              id="deviceCode"
+              placeholder="Ex: COW001234"
+              required
+              className="text-input"
+            />
+            <p className="help-text">Código único encontrado na etiqueta do dispositivo</p>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className={`primary-button ${isLoading ? 'loading' : ''}`}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <div className="spinner"></div>
+                Conectando...
+              </>
+            ) : (
+              <>
+                📶 Conectar e Configurar
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Message Container */}
+        {message && (
+          <div className={`message-container ${message.type}`}>
+            {message.text}
+          </div>
+        )}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   )
 }
 
