@@ -303,6 +303,115 @@ body {
   color: #856404;
 }
 
+/* WiFi Networks Section */
+.wifi-networks-section {
+  margin-top: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.subsection-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 10px;
+}
+
+.networks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.network-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f8f9fa;
+}
+
+.network-item:hover {
+  background: #e9ecef;
+  border-color: #8bc34a;
+}
+
+.network-item.selected {
+  background: #e8f5e8;
+  border-color: #8bc34a;
+}
+
+.network-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.network-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.network-details {
+  font-size: 11px;
+  color: #6c757d;
+}
+
+.network-signal {
+  font-size: 16px;
+}
+
+/* WiFi Status Section */
+.wifi-status-section {
+  margin-top: 15px;
+  padding: 15px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.wifi-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.wifi-status.connected {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.wifi-status.connecting {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.wifi-status.failed {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.wifi-status.unknown {
+  background: #f8f9fa;
+  color: #6c757d;
+}
+
+.status-reason {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
 /* Responsive Design */
 @media (min-width: 768px) {
   .app-container {
