@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { setSSID } from './redux/actions/actions'
+import { setSSID, setBluetoothConnection, setBluetoothDevice, setBluetoothStatus } from './redux/actions/actions'
 import './index.css'
 
 function App() {
   const dispatch = useDispatch()
   const ssid = useSelector(state => state.volatileState?.ssid || '')
+  const bluetoothConnection = useSelector(state => state.volatileState?.bluetoothConnection || false)
+  const bluetoothDevice = useSelector(state => state.volatileState?.bluetoothDevice || null)
+  const bluetoothStatus = useSelector(state => state.volatileState?.bluetoothStatus || 'Não conectado')
   
   const [showPassword, setShowPassword] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState(null)
+  const [isConnectingBluetooth, setIsConnectingBluetooth] = useState(false)
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -19,6 +23,100 @@ function App() {
 
   const handleSSIDChange = (e) => {
     dispatch(setSSID(e.target.value))
+  }
+
+  // Função para conectar Bluetooth
+  const handleBluetoothConnect = async () => {
+    if (!navigator.bluetooth) {
+      setMessage({
+        type: 'error',
+        text: 'Bluetooth não está disponível neste navegador'
+      })
+      return
+    }
+
+    setIsConnectingBluetooth(true)
+    dispatch(setBluetoothStatus('Conectando...'))
+
+    try {
+      // Solicitar dispositivo Bluetooth específico
+      const device = await navigator.bluetooth.requestDevice({
+        filters: [
+          {
+            name: 'PROV_82D988'
+          }
+        ],
+        optionalServices: ['generic_access'] // Serviços opcionais
+      })
+
+      console.log('Dispositivo selecionado:', device.name)
+
+      // Conectar ao dispositivo
+      const server = await device.gatt.connect()
+      console.log('Conectado ao servidor GATT')
+
+      // Configurar listener para desconexão
+      device.addEventListener('gattserverdisconnected', handleBluetoothDisconnect)
+
+      // Salvar no Redux
+      dispatch(setBluetoothDevice(device))
+      dispatch(setBluetoothConnection(true))
+      dispatch(setBluetoothStatus(`Conectado: ${device.name}`))
+
+      setMessage({
+        type: 'success',
+        text: `Conectado com sucesso ao dispositivo: ${device.name}`
+      })
+
+    } catch (error) {
+      console.error('Erro ao conectar Bluetooth:', error)
+      
+      if (error.name === 'NotFoundError') {
+        dispatch(setBluetoothStatus('Dispositivo PROV_82D988 não encontrado'))
+        setMessage({
+          type: 'error',
+          text: 'Dispositivo PROV_82D988 não foi encontrado. Verifique se está ligado e visível.'
+        })
+      } else if (error.name === 'NotAllowedError') {
+        dispatch(setBluetoothStatus('Permissão negada'))
+        setMessage({
+          type: 'error',
+          text: 'Permissão para Bluetooth foi negada'
+        })
+      } else {
+        dispatch(setBluetoothStatus('Erro na conexão'))
+        setMessage({
+          type: 'error',
+          text: `Erro ao conectar: ${error.message}`
+        })
+      }
+
+      // Limpar estado em caso de erro
+      dispatch(setBluetoothDevice(null))
+      dispatch(setBluetoothConnection(false))
+    } finally {
+      setIsConnectingBluetooth(false)
+    }
+  }
+
+  // Função para desconectar Bluetooth
+  const handleBluetoothDisconnect = () => {
+    console.log('Dispositivo Bluetooth desconectado')
+    dispatch(setBluetoothDevice(null))
+    dispatch(setBluetoothConnection(false))
+    dispatch(setBluetoothStatus('Desconectado'))
+    
+    setMessage({
+      type: 'warning',
+      text: 'Dispositivo Bluetooth foi desconectado'
+    })
+  }
+
+  // Função para desconectar manualmente
+  const handleBluetoothDisconnectManual = () => {
+    if (bluetoothDevice && bluetoothDevice.gatt.connected) {
+      bluetoothDevice.gatt.disconnect()
+    }
   }
 
   return (
@@ -33,12 +131,45 @@ function App() {
 
       {/* Form Container */}
       <div className="form-container">
-        {/* Status Indicator */}
-        <div className="status-indicator">
-          <div className={`indicator-dot ${isConnected ? 'connected' : 'disconnected'}`}></div>
-          <span className="status-text">
-            {isConnected ? 'Dispositivo conectado' : 'Dispositivo desconectado'}
-          </span>
+        {/* Bluetooth Connection Section */}
+        <div className="bluetooth-section">
+          <h3 className="section-title">Conexão Bluetooth</h3>
+          <div className="bluetooth-status">
+            <div className={`indicator-dot ${bluetoothConnection ? 'connected' : 'disconnected'}`}></div>
+            <span className="status-text">
+              {bluetoothStatus}
+            </span>
+          </div>
+          
+          <div className="bluetooth-buttons">
+            {!bluetoothConnection ? (
+              <button
+                type="button"
+                className={`primary-button ${isConnectingBluetooth ? 'loading' : ''}`}
+                onClick={handleBluetoothConnect}
+                disabled={isConnectingBluetooth}
+              >
+                {isConnectingBluetooth ? (
+                  <>
+                    <div className="spinner"></div>
+                    Conectando...
+                  </>
+                ) : (
+                  <>
+                    📱 Buscar PROV_82D988
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={handleBluetoothDisconnectManual}
+              >
+                🔌 Desconectar
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Form */}

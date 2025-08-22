@@ -10,4 +10,19 @@ export const setSSID = (ssid) => ({
   payload: ssid,
 });
 
+export const setBluetoothConnection = (isConnected) => ({
+  type: ACTION_TYPES.SET_BLUETOOTH_CONNECTION,
+  payload: isConnected,
+});
+
+export const setBluetoothDevice = (device) => ({
+  type: ACTION_TYPES.SET_BLUETOOTH_DEVICE,
+  payload: device,
+});
+
+export const setBluetoothStatus = (status) => ({
+  type: ACTION_TYPES.SET_BLUETOOTH_STATUS,
+  payload: status,
+});
+
 
